@@ -1,0 +1,128 @@
+#!/bin/bash
+
+### BEGIN INIT INFO
+# processname:       apache_exporter
+# Short-Description: prometheus exporter for apache httpd metrics.
+# Description:       prometheus exporter for apache httpd metrics.
+#
+# chkconfig: 2345 80 80
+# pidfile: /var/run/prometheus/apache_exporter.pid
+#
+#
+### END INIT INFO
+
+#set -e
+
+# Source function library.
+. /etc/init.d/functions
+
+
+NAME=apache_exporter
+DESC="prometheus exporter for apache httpd"
+DAEMON=/opt/prometheus/apache_exporter
+USER=prometheus
+CONFIG=
+PID="/var/run/prometheus/$NAME.pid"
+LOG="/var/log/prometheus/$NAME.log"
+GOSU=/usr/local/bin/gosu
+
+DAEMON_OPTS=
+
+RETVAL=0
+
+
+
+# Check if DAEMON binary exist
+[ -f $DAEMON ] || exit 0
+
+[ -f "/etc/default/$NAME" ]  &&  . /etc/default/$NAME
+
+
+service_not_configured () {
+  if [ "$1" != "stop" ]; then
+    printf "\tPlease configure $NAME and then edit /etc/default/$NAME\n"
+    printf "\tand set the \"START\" variable to \"yes\" in order to allow\n"
+    printf "\t$NAME to start.\n"
+  fi
+  exit 0
+}
+
+service_checks() {
+  # Check if START variable is set to "yes", if not we exit.
+  if [ "$START" != "yes" ]; then
+    service_not_configured $1
+  fi
+
+  # Prepare directories
+  mkdir -p "/var/run/prometheus" "/var/log/prometheus"
+  chown -R $USER "/var/run/prometheus" "/var/log/prometheus"
+
+  # Check if PID exists
+  if [ -f "$PID" ]; then
+    PID_NUMBER=`cat $PID`
+    if [ -z "`ps axf | grep ${PID_NUMBER} | grep -v grep`" ]; then
+      echo "Service was aborted abnormally; clean the PID file and continue..."
+      rm -f "$PID"
+    else
+      echo "Service already started; skip..."
+      exit 1
+    fi
+  fi
+}
+
+start() {
+  service_checks $1
+  $GOSU $USER   $DAEMON $DAEMON_OPTS  > $LOG 2>&1  &
+  RETVAL=$?
+  echo $! > $PID
+}
+
+stop() {
+  killproc -p $PID -b $DAEMON  $NAME
+  RETVAL=$?
+}
+
+reload() {
+  #-- sorry but apache_exporter doesn't handle -HUP signal...
+  #killproc -p $PID -b $DAEMON  $NAME -HUP
+  #RETVAL=$?
+  stop
+  start
+}
+
+case "$1" in
+  start)
+    echo -n $"Starting $DESC -" "$NAME" $'\n'
+    start
+    ;;
+
+  stop)
+    echo -n $"Stopping $DESC -" "$NAME" $'\n'
+    stop
+    ;;
+
+  reload)
+    echo -n $"Reloading $DESC configuration -" "$NAME" $'\n'
+    reload
+    ;;
+
+  restart|force-reload)
+    echo -n $"Restarting $DESC -" "$NAME" $'\n'
+    stop
+    start
+    ;;
+
+  syntax)
+    $DAEMON --help
+    ;;
+
+  status)
+    status -p $PID $DAEMON
+    ;;
+
+  *)
+    echo -n $"Usage: /etc/init.d/$NAME {start|stop|reload|restart|force-reload|syntax|status}" $'\n'
+    ;;
+esac
+
+exit $RETVAL

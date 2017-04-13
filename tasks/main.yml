@@ -56,6 +56,14 @@
   include: install-node-exporter.yml
   when: '"node_exporter" in prometheus_components'
 
+- name: install apache exporter
+  include: install-apache-exporter.yml
+  when: '"apache_exporter" in prometheus_components'
+
+- name: install mongodb exporter
+  include: install-mongodb-exporter.yml
+  when: '"mongodb_exporter" in prometheus_components'
+
 - name: install alertmanager
   include: install-alertmanager.yml
   when: '"alertmanager" in prometheus_components'

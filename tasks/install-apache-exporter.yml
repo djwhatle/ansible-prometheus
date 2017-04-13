@@ -1,0 +1,43 @@
+---
+
+- name: ensure apache service exists
+  stat: path=/etc/init.d/httpd
+  register: apache_service
+
+- block:
+  - name: enable apache /server-status endpoint for localhost
+    blockinfile:
+      dest: /etc/httpd/conf/httpd.conf
+      insertbefore: "#<Location /server-status>"
+      block: |
+        <Location /server-status>
+            SetHandler server-status
+            Order deny,allow
+            Deny from all
+            Allow from localhost
+        </Location>
+
+  - name: enable extended apache status
+    lineinfile:
+      dest: /etc/httpd/conf/httpd.conf
+      regexp: '^(#|).*ExtendedStatus On$'
+      line: 'ExtendedStatus On'
+
+  - name: copy apache exporter to server
+    copy:
+      src: "../files/apache_exporter_0.3_linux_amd64"
+      dest: /opt/prometheus/apache_exporter
+      owner: prometheus
+      group: prometheus
+      mode: 0755
+
+  - name: copy apache exporter INIT script to server
+    template: src="../templates/apache_exporter.sysvinit.redhat.sh.j2"  dest="/etc/init.d/apache_exporter"  mode="a+x"
+
+  - name: set apache_exporter default file into /etc/defaults
+    copy: src="../files/etc-default-apache_exporter"  dest=/etc/default/apache_exporter
+
+  - name: set INIT status and start
+    service: name=apache_exporter enabled=yes state=started
+
+  when: apache_service.stat.exists

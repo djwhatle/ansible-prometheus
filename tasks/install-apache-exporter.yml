@@ -23,6 +23,10 @@
       regexp: '^(#|).*ExtendedStatus On$'
       line: 'ExtendedStatus On'
 
+  - name: reload apache httpd configuration settings
+    service: name=httpd state=reloaded
+
+
   - name: copy apache exporter to server
     copy:
       src: "../files/apache_exporter_0.3_linux_amd64"
@@ -37,7 +41,7 @@
   - name: set apache_exporter default file into /etc/defaults
     copy: src="../files/etc-default-apache_exporter"  dest=/etc/default/apache_exporter
 
-  - name: set INIT status and start
+  - name: set INIT status and start apache_exporter
     service: name=apache_exporter enabled=yes state=started
 
   when: apache_service.stat.exists

@@ -1,0 +1,25 @@
+---
+
+- name: ensure mongod service exists
+  stat: path=/etc/init.d/mongod
+  register: mongod_service
+
+- block:
+  - name: copy mongodb exporter to server
+    copy:
+      src: "../files/mongodb_exporter_1.0_linux_amd64"
+      dest: /opt/prometheus/mongodb_exporter
+      owner: prometheus
+      group: prometheus
+      mode: 0755
+
+  - name: copy mongodb_exporter INIT script to server
+    template: src="../templates/mongodb_exporter.sysvinit.redhat.sh.j2"  dest="/etc/init.d/mongodb_exporter"  mode="a+x"
+
+  - name: set mongodb_exporter default file into /etc/defaults
+    copy: src="../files/etc-default-mongodb_exporter"  dest=/etc/default/mongodb_exporter
+
+  - name: set INIT status and start
+    service: name=mongodb_exporter enabled=yes state=started
+
+  when: mongod_service.stat.exists

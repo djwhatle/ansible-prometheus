@@ -120,67 +120,7 @@ Alertmanager:
 - `stop alertmanager`
 
 
-
-## Usage
-
-
-### Step 1: add role
-
-Add role name `dwhatley.prometheus` to your playbook file.
-
-
-### Step 2: add variables
-
-Set vars in your playbook file, if necessary.
-
-Simple example:
-
-```yaml
----
-# file: simple-playbook.yml
-
-- hosts: all
-  become: True
-  roles:
-    - williamyeh.prometheus
-
-  vars:
-    prometheus_components: [ "prometheus", "alertmanager" ]
-
-    prometheus_alertmanager_url: "http://localhost:9093/"
-```
-
-
-### Step 3: copy user's config files, if necessary
-
-
-More practical example:
-
-```yaml
----
-# file: complex-playbook.yml
-
-- hosts: all
-  become: True
-  roles:
-    - williamyeh.prometheus
-
-  vars:
-    prometheus_components:
-      - prometheus
-      - node_exporter
-      - alertmanager
-
-    prometheus_rule_files:
-      this_is_rule_1_InstanceDown:
-        src:  some/path/basic.rules
-        dest: basic.rules
-
-    prometheus_alertmanager_conf: some/path/alertmanager.yml.j2
-```
-
-
-### Step 4: browse the default Prometheus pages
+### Browse the default Prometheus pages
 
 Open the page in your browser:
 

@@ -15,6 +15,7 @@
             Order deny,allow
             Deny from all
             Allow from localhost
+            Allow from 127.0.0.1
         </Location>
 
   - name: enable extended apache status
@@ -22,6 +23,10 @@
       dest: /etc/httpd/conf/httpd.conf
       regexp: '^(#|).*ExtendedStatus On$'
       line: 'ExtendedStatus On'
+
+  - name: reload apache httpd configuration settings
+    service: name=httpd state=reloaded
+
 
   - name: copy apache exporter to server
     copy:
@@ -37,7 +42,7 @@
   - name: set apache_exporter default file into /etc/defaults
     copy: src="../files/etc-default-apache_exporter"  dest=/etc/default/apache_exporter
 
-  - name: set INIT status and start
+  - name: set INIT status and start apache_exporter
     service: name=apache_exporter enabled=yes state=started
 
   when: apache_service.stat.exists

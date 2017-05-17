@@ -1,50 +1,6 @@
 
-williamyeh.prometheus for Ansible Galaxy
+prometheus playbook for RHUI support
 ============
-
-[![Circle CI](https://circleci.com/gh/William-Yeh/ansible-prometheus.svg?style=shield)](https://circleci.com/gh/William-Yeh/ansible-prometheus) [![Build Status](https://travis-ci.org/William-Yeh/ansible-prometheus.svg?branch=master)](https://travis-ci.org/William-Yeh/ansible-prometheus)
-
-
-
-## Summary
-
-Role name in Ansible Galaxy: **[williamyeh.prometheus](https://galaxy.ansible.com/williamyeh/prometheus/)**
-
-This Ansible role has the following features for [Prometheus](http://prometheus.io/):
-
- - Install specific versions of [Prometheus server](https://github.com/prometheus/prometheus), [Node exporter](https://github.com/prometheus/node_exporter), [Alertmanager](https://github.com/prometheus/alertmanager).
- - Handlers for restart/reload/stop events;
- - Bare bone configuration (*real* configuration should be left to user's template files; see **Usage** section below).
-
-
-To keep this role simple, this role only installs 3 components: Prometheus server, Node exporter, and Alertmanager. Use the following roles if you want to install other Prometheus exporters:
-
-- Consul: **[William-Yeh.consul_exporter](https://galaxy.ansible.com/William-Yeh/consul_exporter/)**
-- Elasticsearch: **[William-Yeh.es_cluster_exporter](https://galaxy.ansible.com/William-Yeh/es_cluster_exporter/)**
-- MongoDB: **[williamyeh.mongodb_exporter](https://galaxy.ansible.com/williamyeh/mongodb_exporter/)**
-
-
-
-## Role Variables
-
-
-### Mandatory variables
-
-The components to be installed:
-
-```yaml
-# Supported components:
-#
-#   [Server components]
-#     - "prometheus"
-#     - "alertmanager"
-#
-#   [Exporter components]
-#     - "node_exporter"
-#
-prometheus_components
-```
-
 
 
 ### Optional variables: general settings
@@ -81,53 +37,6 @@ gosu_version:  "1.10"
 ```
 
 
-### Optional variables: systemd or not
-
-
-If the Linux distributions are equipped with systemd, this role will use this mechanism accordingly. You can disable this (i.e., use traditional SysV-style init script) by defining the following variable(s) to `false`:
-
-```yaml
-# currently, only node_exporter is supported.
-prometheus_node_exporter_use_systemd
-```
-
-
-
-### Optional variables: Prometheus server
-
-User-configurable defaults:
-
-```yaml
-# which version?
-prometheus_version:  1.5.0
-
-
-
-# directory for rule files
-prometheus_rule_path:  {{ prometheus_config_path }}/rules
-
-# directory for file_sd files
-prometheus_file_sd_config_path:  {{ prometheus_config_path }}/tgroups
-
-# directory for runtime database
-prometheus_db_path:   /var/lib/prometheus
-```
-
-
-
-
-
-
-User-installable configuration file (see [doc](http://prometheus.io/docs/operating/configuration/) for details):
-
-
-```yaml
-# main conf template relative to `playbook_dir`;
-# to be installed to "{{ prometheus_config_path }}/prometheus.yml"
-prometheus_conf_main
-```
-
-
 User-installable rule files (see [doc](http://prometheus.io/docs/alerting/rules/) for details):
 
 
@@ -158,29 +67,11 @@ prometheus_opts
 
 ### Optional variables: Node exporter
 
-
-User-configurable defaults:
-
-```yaml
-# which version?
-prometheus_node_exporter_version:  0.13.0
-```
-
 Additional command-line arguments, if any (use `node_exporter --help` to see the full list of arguments):
 
 ```yaml
 prometheus_node_exporter_opts
 ```
-
-
-### Optional variables: Alertmanager
-
-
-User-configurable defaults:
-
-```yaml
-# which version?
-prometheus_alertmanager_version:  0.5.1
 
 # directory for runtime database (currently for `silences.json`)
 prometheus_alertmanager_db_path: /var/lib/alertmanager
@@ -199,31 +90,6 @@ Additional command-line arguments, if any (use `alertmanager --help` to see the 
 ```yaml
 prometheus_alertmanager_opts
 ```
-
-
-### Optional: building from source tree
-
-(Credit: [Robbie Trencheny](https://github.com/robbiet480))
-
-For aforementioned `prometheus_components`, you can optionally download/compile from the *master* branch of [Prometheus repositories](https://github.com/prometheus) by setting the respective version to `git`.
-
-It will install a temporary Golang compiler in the `prometheus_workdir` directory (defined in `defaults/main.yml`).
-
-For example, get the latest code for all components by assigning all `*_version` variables to `git`:
-
-```yaml
-prometheus_version: git
-prometheus_node_exporter_version: git
-prometheus_alertmanager_version: git
-```
-
-If you'd like to force rebuild each time, enable the following variable (default is `false`):
-
-```yaml
-prometheus_rebuild: true
-```
-
-
 
 ## Handlers
 
@@ -260,7 +126,7 @@ Alertmanager:
 
 ### Step 1: add role
 
-Add role name `williamyeh.prometheus` to your playbook file.
+Add role name `dwhatley.prometheus` to your playbook file.
 
 
 ### Step 2: add variables
@@ -322,18 +188,6 @@ Open the page in your browser:
 
 - Alertmanager - `http://HOST:9093`
 
-
-## Dependencies
-
-None.
-
-
-## Contributors
-
-- [William Yeh](https://github.com/William-Yeh)
-- [Robbie Trencheny](https://github.com/robbiet480) - contribute an early version of building binaries from Go source code.
-- [Travis Truman](https://github.com/trumant) - contribute an early version of consul_exporter installer; now moved to [William-Yeh.consul_exporter](https://github.com/William-Yeh/ansible-consul-exporter).
-- [Musee Ullah](https://github.com/lae)
 
 ## License
 
